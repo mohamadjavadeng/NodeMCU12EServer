@@ -40,7 +40,22 @@ void loop() {
     while(clients[i] && clients[i].available() > 0){
       Serial.write(clients[i].read());
     }
+    Serial.println();
   }
+
+  for(byte i = 0; i < 2; i++){
+    if(clients[i]){
+      clients[i].println("send your data");
+    }
+  }
+  delay(1000);
+  Serial.println("Data Has been Sent");
+  for (byte i = 0; i < 2; i++) {
+    if (clients[i] && !clients[i].connected()) {
+      clients[i].stop();
+    }
+  }
+
 
   // put your main code here, to run repeatedly:
 
