@@ -1,5 +1,7 @@
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
+#include <ArduinoJson.h>
+#include <commandHandler.h>
 
 const char* ssid     = "SSID";
 const char* pass = "PASSWORD";
@@ -12,7 +14,7 @@ IPAddress gateway(192, 168, 1, 1);
 IPAddress subnet(255, 255, 255, 0);
 IPAddress dns(192, 168, 1, 1);   //optional
 char answerServer[20];
-WiFiClient clients[2];
+
 int j = 0;
 bool ledStatus = false;
 char* serverAnswer;
@@ -20,18 +22,19 @@ char* serverAnswer;
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
-  delay(1000);
+  delay(500);
   if (!WiFi.config(local_IP, gateway, subnet, dns)) {
     Serial.println("STA Failed to configure");
   }
 
   WiFi.begin(ssid, pass);
-  Serial.println("Connecting..");
+  Serial.print("Connecting..");
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
     
   }
+  Serial.println();
   Serial.print("Connected to WiFi. IP:");
   Serial.println(WiFi.localIP());
   wifiServer.begin();
@@ -40,27 +43,25 @@ void setup() {
 void loop() {
   WiFiClient client = wifiServer.accept();
   if(client){
-    Serial.println("new clients found...");
-    for(byte i = 0; i < 2; i++){
-       if(!clients[i]){
-         client.print("Hello, Client Number:");
-         client.println(String(i));
-         clients[i] = client;
-         break;
-       }
+    if(NewClient(client, MAX_CLIENTS)){
+      Serial.println("New Client Connected");
     }
   }
-  else{
-    Serial.println("no new clients");
+  for(byte i = 0; i < MAX_CLIENTS; i++){
+    if(clients[i]){
+      clients[i].println("client " + String(i) + " send your data");
+      // clients[i].println("send your data");
+      Serial.println("command has sent to client " + String(i));
+    }
   }
-  for(byte i = 0; i < 2; i++){
+  for(byte i = 0; i < MAX_CLIENTS; i++){
     while(clients[i] && clients[i].available() > 0){
       Serial.write(clients[i].read());
     }
     Serial.println();
   }
 
-  for(byte i = 0; i < 2; i++){
+  for(byte i = 0; i < MAX_CLIENTS; i++){
     if(clients[i]){
       if((i == 0) && (ledStatus == false)){
         clients[i].println("client 0 led on");
@@ -79,7 +80,7 @@ void loop() {
   }
   delay(1000);
   
-  for (byte i = 0; i < 2; i++) {
+  for (byte i = 0; i < MAX_CLIENTS; i++) {
     if (clients[i] && !clients[i].connected()) {
       clients[i].stop();
     }
