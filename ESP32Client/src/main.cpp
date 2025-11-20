@@ -2,15 +2,16 @@
 #include <WiFi.h>
 
 #define LED_PIN 2
-const char* ssid     = "TP-Link_ECA4";
-const char* password = "50867387";
+const char* ssid     = "SSID";
+const char* password = "PASSWORD";
 
 const char* PIP = "192.168.1.184";
 const int PORT = 8090;
 
 struct Command {
   int clientID = -1;
-  bool ledState = false;
+  int commandType = -1; // 0 for LED
+  int pinNumber = -1;
   bool valid = false;
 };
 
@@ -105,16 +106,19 @@ Command parseCommand(String message) {
     int firstSpace = message.indexOf(' ');
     int secondSpace = message.indexOf(' ', firstSpace + 1);
     int thirdSpace = message.indexOf(' ', secondSpace + 1);
+    int fourthSpace = message.indexOf(' ', thirdSpace + 1);
+    int fifthSpace = message.indexOf(' ', fourthSpace + 1);
+    int sixthSpace = message.indexOf(' ', fifthSpace + 1);
 
     if (secondSpace > 0 && thirdSpace > 0) {
       String idStr = message.substring(firstSpace + 1, secondSpace);
-      String ledCmd = message.substring(thirdSpace + 1);
-
+      String CmdType = message.substring(thirdSpace + 1, fourthSpace > 0 ? fourthSpace : message.length());
+      String pinNumberStr = message.substring(secondSpace + 1, thirdSpace);
       int id = idStr.toInt();
-      bool state = (ledCmd == "on");
+      int commandType = CmdType.toInt();
 
       cmd.clientID = id;
-      cmd.ledState = state;
+      cmd.commandType = commandType;
       cmd.valid = true;
     }
   }
