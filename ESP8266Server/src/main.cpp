@@ -3,18 +3,18 @@
 #include <ArduinoJson.h>
 #include <commandHandler.h>
 
-const char* ssid     = "SSID";
-const char* pass = "PASSWORD";
+const char* ssid     = "ESP_MODEM";
+const char* password = "12345678";
 
 
 WiFiServer wifiServer(8090);
 
-IPAddress local_IP(192, 168, 1, 184);
-IPAddress gateway(192, 168, 1, 1);
+IPAddress local_IP(192, 168, 4, 3);
+IPAddress gateway(192, 168, 4, 1);
 IPAddress subnet(255, 255, 255, 0);
-IPAddress dns(192, 168, 1, 1);   //optional
-char answerServer[20];
+IPAddress dns(192, 168, 4, 1);   //optional
 
+char answerServer[20];
 int j = 0;
 bool ledStatus = false;
 char* serverAnswer;
@@ -23,18 +23,26 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
   delay(500);
+  
   if (!WiFi.config(local_IP, gateway, subnet, dns)) {
     Serial.println("STA Failed to configure");
   }
 
-  WiFi.begin(ssid, pass);
+  WiFi.begin(ssid, password);
   Serial.print("Connecting..");
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
     
   }
-  Serial.println();
+  // Start WiFi Access Point
+  // WiFi.softAP(ssid, password);
+  // Serial.println("AP MODE STARTED");
+  // Serial.print("SSID: ");
+  // Serial.println(ssid);
+  // Serial.print("IP: ");
+  // Serial.println(WiFi.softAPIP());
+  // Serial.println();
   Serial.print("Connected to WiFi. IP:");
   Serial.println(WiFi.localIP());
   wifiServer.begin();
@@ -47,21 +55,21 @@ void loop() {
       Serial.println("New Client Connected");
     }
   }
-  for(byte i = 0; i < MAX_CLIENTS; i++){
+  /*for(byte i = 0; i < MAX_CLIENTS; i++){
     if(clients[i]){
       clients[i].println("client " + String(i) + " send your data");
       // clients[i].println("send your data");
       Serial.println("command has sent to client " + String(i));
     }
-  }
+  }*/
   for(byte i = 0; i < MAX_CLIENTS; i++){
     while(clients[i] && clients[i].available() > 0){
       Serial.write(clients[i].read());
     }
-    Serial.println();
+    // Serial.println();
   }
 
-  for(byte i = 0; i < MAX_CLIENTS; i++){
+  /*for(byte i = 0; i < MAX_CLIENTS; i++){
     if(clients[i]){
       if((i == 0) && (ledStatus == false)){
         clients[i].println("client 0 led on");
@@ -77,7 +85,7 @@ void loop() {
       // clients[i].println("send your data");
       Serial.println("Data Has been Sent");
     }
-  }
+  }*/
   delay(1000);
   
   for (byte i = 0; i < MAX_CLIENTS; i++) {
